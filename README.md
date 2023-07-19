@@ -1,13 +1,16 @@
-# Culiops
-![Testing](https://github.com/culiops/culiops/actions/workflows/testing.yml/badge.svg)
+# Culiup
+![Testing](https://github.com/culiops/culiup/actions/workflows/testing.yml/badge.svg)
 
-An internal developer platform(IDP) to help sysadmin, DevOps, SRE, and Cloud Engineer to have a better life
+A free and open source uptime monitoring tool to help sysadmin, DevOps, SRE, and Cloud Engineer to have a better life
 
 ## The features
-- Monitoring cloud resources
-- Monitoring cloud cost
-- Monitoring endpoint
-- Internal developer platform
+- Monitoring website
+- Monitoring SSL
+- Monitoring Port
+- Monitoring Ping
+- Status Page
+- Incident and SLA reports
+
 
 ## Development setup
 
