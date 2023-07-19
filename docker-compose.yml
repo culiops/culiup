@@ -1,0 +1,170 @@
+version: "3.9"
+
+services:
+  gateway:
+    build: ./dockers/nginx-tls
+    image: culiup/nginx:v1.0.0
+    volumes:
+      - ./dockers/configs/nginx:/etc/nginx/conf.d
+      - ./files:/var/www/files
+      - ./static:/var/www/static
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      app:
+        condition: service_healthy
+      # daphne:
+      #   condition: service_healthy
+
+  app:
+    build: .
+    image: culiops/culiup:v1.0.0
+    command: sh /entrypoint.sh
+    volumes:
+      - ./:/app
+      - ./files:/var/www/files
+    environment:
+      - DJANGO_SETTINGS_MODULE=settings.dev
+      - SECRET_KEY=_s6=-o$o0c&%9ow(sv_sv4y*9fek^7tg5)z+_)=6q$f=ux^c%x
+      - DATABASE_HOST=db
+      - DATABASE_NAME=culiup
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      # redis:
+      #   condition: service_healthy
+      db:
+        condition: service_healthy
+
+  # daphne:
+  #   build: .
+  #   image: culiops/culiup:v1.0.0
+  #   command: python manage.py runserver 0.0.0.0:8000
+  #   volumes:
+  #     - ./:/app
+  #   environment:
+  #     - DJANGO_SETTINGS_MODULE=settings.dev
+  #     - SECRET_KEY=_s6=-o$o0c&%9ow(sv_sv4y*9fek^7tg5)z+_)=6q$f=ux^c%x
+  #     - DATABASE_HOST=db
+  #     - DATABASE_NAME=culiup
+  #     - DATABASE_USER=postgres
+  #     - DATABASE_PASSWORD=postgres
+  #   deploy:
+  #     restart_policy:
+  #       condition: on-failure
+  #       max_attempts: 3
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     db:
+  #       condition: service_healthy
+
+  # celery:
+  #   build: .
+  #   image: culiops/culiops:v1.0.0
+  #   command: sh -c "pip install watchdog && watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A easyAdmin worker -E -l info --concurrency=1"
+  #   volumes:
+  #     - ./:/app
+  #   environment:
+  #     - DJANGO_SETTINGS_MODULE=settings.dev
+  #     - SECRET_KEY=_s6=-o$o0c&%9ow(sv_sv4y*9fek^7tg5)z+_)=6q$f=ux^c%x
+  #     - PYTHONOPTIMIZE=1
+  #     - ANSIBLE_PIPELINING=True
+  #     - ANSIBLE_NO_TARGET_SYSLOG=True
+  #     - ANSIBLE_VERBOSITY=2
+  #     - ANSIBLE_GATHER_TIMEOUT=30
+  #     - ANSIBLE_TIMEOUT=30
+  #     - DATABASE_HOST=db
+  #     - DATABASE_NAME=culipanel
+  #     - DATABASE_USER=postgres
+  #     - DATABASE_PASSWORD=postgres
+  #     - PAPERTRAIL_TOKEN=RJqk45qID1ku9lUKqbCE
+  #   deploy:
+  #     restart_policy:
+  #       condition: on-failure
+  #       max_attempts: 3
+  #   depends_on:
+  #     commander:
+  #       condition: service_healthy
+
+  # celery-beat:
+  #   build: .
+  #   image: culiops/culiops:v1.0.0
+  #   command: celery -A easyAdmin beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+  #   volumes:
+  #     - ./:/app
+  #   environment:
+  #     - DJANGO_SETTINGS_MODULE=settings.dev
+  #     - SECRET_KEY=_s6=-o$o0c&%9ow(sv_sv4y*9fek^7tg5)z+_)=6q$f=ux^c%x
+  #     - DATABASE_HOST=db
+  #     - DATABASE_NAME=culipanel
+  #     - DATABASE_USER=postgres
+  #     - DATABASE_PASSWORD=postgres
+  #     - PAPERTRAIL_TOKEN=RJqk45qID1ku9lUKqbCE
+  #   deploy:
+  #     restart_policy:
+  #       condition: on-failure
+  #       max_attempts: 3
+  #   depends_on:
+  #     commander:
+  #       condition: service_healthy
+
+  # redis:
+  #   image: "redis:7.0.4-alpine"
+  #   deploy:
+  #     restart_policy:
+  #       condition: on-failure
+  #       max_attempts: 3
+  #   healthcheck:
+  #     test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  db:
+    image: postgres:14.4-alpine
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=culiup
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGUSER=postgres
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-q",
+          "-d",
+          "${POSTGRES_DB}",
+          "-U",
+          "${POSTGRES_USER}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db:
