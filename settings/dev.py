@@ -9,6 +9,22 @@ APP_DOMAIN = "culiup.xyz"
 BASE_URL = "https://dev.culiup.xyz"
 ALLOWED_HOSTS = ["127.0.0.1", "dev.culiup.xyz", "localhost"]
 
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "dj_rest_auth",
+    "uptime",
+    "authen",
+    "home",
+    "corsheaders",
+]
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
@@ -51,6 +67,9 @@ LOGGING = {
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 CSRF_TRUSTED_ORIGINS = ["%s" % BASE_URL]
+CORS_ALLOWED_ORIGINS = ["http://localhost", "http://127.0.0.1"]
+CORS_ALLOW_CREDENTIALS = True
+
 # CELERY_BROKER_URL = 'redis://redis:6379'
 # ANSIBLE_RETRIES = 0
 # PLAYBOOK_VERSION = "v2"
